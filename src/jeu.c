@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <windows.h> // Inclure la bibliothèque pour la fonction Beep
+#include <windows.h>
 #include "carte.h"
+#include "son.h"
 
-void jouerBlackjack() {
+void jouerBlackjack()
+{
     Carte deck[TAILLE_DECK];
     Main joueur, croupier, splitMain;
     int indexDeck = 0;
@@ -17,13 +19,25 @@ void jouerBlackjack() {
     initialiserMain(&croupier);
     initialiserMain(&splitMain);
 
-    while (banque > 0) {
-        afficherSeparation();
-        printf("Vous avez %d dans votre banque.\n", banque);
+    while (banque > 0)
+    {
+        afficherSeparation(banque);
+        printf("Vous avez %d$ dans votre banque.\n", banque);
         printf("Combien voulez-vous miser? ");
         scanf("%d", &mise);
 
-        if (mise > banque) {
+        // Nettoyer l'input du joueur
+        while (getchar() != '\n')
+            ;
+
+        if (mise <= 0)
+        {
+            printf("Mise invalide. Veuillez miser un montant positif.\n");
+            continue;
+        }
+
+        if (mise > banque)
+        {
             printf("Mise invalide. Vous n'avez pas assez d'argent.\n");
             continue;
         }
@@ -43,22 +57,26 @@ void jouerBlackjack() {
         ajouterCarte(&croupier, deck[indexDeck++]);
 
         // Vérifier pour l'assurance
-        if (croupier.cartes[0].rang == 1) {
+        if (croupier.cartes[0].rang == 1)
+        {
             printf("Le croupier montre un As. Voulez-vous prendre une assurance (y/n)? ");
             char choixAssurance;
             scanf(" %c", &choixAssurance);
-            if (choixAssurance == 'y' || choixAssurance == 'Y') {
+            if (choixAssurance == 'y' || choixAssurance == 'Y')
+            {
                 insurance = mise / 2;
                 banque -= insurance;
             }
         }
 
         // Vérifier pour le split
-        if (joueur.cartes[0].rang == joueur.cartes[1].rang) {
+        if (joueur.cartes[0].rang == joueur.cartes[1].rang)
+        {
             printf("Vous avez une paire. Voulez-vous faire un split (y/n)? ");
             char choixSplit;
             scanf(" %c", &choixSplit);
-            if (choixSplit == 'y' || choixSplit == 'Y') {
+            if (choixSplit == 'y' || choixSplit == 'Y')
+            {
                 splitMain.cartes[0] = joueur.cartes[1];
                 splitMain.nbCartes = 1;
                 splitMain.score = joueur.cartes[1].rang > 10 ? 10 : joueur.cartes[1].rang;
@@ -71,14 +89,17 @@ void jouerBlackjack() {
         // Jouer la main principale
         char choix;
         int joueurDepasse = 0;
-        while (1) {
-            afficherSeparation();
-            afficherMain(&joueur, "Joueur");
+        while (1)
+        {
+            afficherSeparation(banque);
+            afficherMain(&joueur, "Moi");
             afficherMain(&croupier, "Croupier");
 
-            if (joueur.score > 21) {
+            if (joueur.score > 21)
+            {
                 printf("Le joueur depasse 21! Le croupier gagne.\n");
                 banque -= mise;
+                jouerSonDefaite(); // Son de défaite
                 joueurDepasse = 1;
                 break;
             }
@@ -86,24 +107,31 @@ void jouerBlackjack() {
             printf("Voulez-vous Tirer (t) ou Rester (r)? ");
             scanf(" %c", &choix);
 
-            if (choix == 't' || choix == 'T') {
+            if (choix == 't' || choix == 'T')
+            {
                 ajouterCarte(&joueur, deck[indexDeck++]);
-            } else {
+            }
+            else
+            {
                 break;
             }
         }
 
         // Jouer la main splitee si applicable
-        if (splitMain.nbCartes > 0 && !joueurDepasse) {
+        if (splitMain.nbCartes > 0 && !joueurDepasse)
+        {
             int splitDepasse = 0;
-            while (1) {
-                afficherSeparation();
+            while (1)
+            {
+                afficherSeparation(banque);
                 afficherMain(&splitMain, "Main splitee");
                 afficherMain(&croupier, "Croupier");
 
-                if (splitMain.score > 21) {
+                if (splitMain.score > 21)
+                {
                     printf("La main splitee depasse 21! Le croupier gagne.\n");
                     banque -= mise;
+                    jouerSonDefaite();
                     splitDepasse = 1;
                     break;
                 }
@@ -111,67 +139,90 @@ void jouerBlackjack() {
                 printf("Voulez-vous Tirer (t) ou Rester (r) pour la main splitee? ");
                 scanf(" %c", &choix);
 
-                if (choix == 't' || choix == 'T') {
+                if (choix == 't' || choix == 'T')
+                {
                     ajouterCarte(&splitMain, deck[indexDeck++]);
-                } else {
+                }
+                else
+                {
                     break;
                 }
             }
 
-            if (!splitDepasse) {
-                while (croupier.score < 17) {
+            if (!splitDepasse)
+            {
+                while (croupier.score < 17)
+                {
                     ajouterCarte(&croupier, deck[indexDeck++]);
                 }
 
-                afficherSeparation();
+                afficherSeparation(banque);
                 afficherMain(&splitMain, "Main splitee");
                 afficherMain(&croupier, "Croupier");
 
-                if (croupier.score > 21) {
+                if (croupier.score > 21)
+                {
                     printf("Le croupier depasse 21! La main splitee gagne.\n");
                     banque += mise * 2;
-                    //faire un beep sonore de win
-                    Beep(750, 300);
-                } else if (splitMain.score > croupier.score) {
+                    jouerSonVictoire();
+                }
+                else if (splitMain.score > croupier.score)
+                {
                     printf("La main splitee gagne!\n");
                     banque += mise * 2;
-                    Beep(750, 300); // Émettre un bip sonore
-                } else if (splitMain.score < croupier.score) {
+                    jouerSonVictoire();
+                }
+                else if (splitMain.score < croupier.score)
+                {
                     printf("Le croupier gagne contre la main splitee.\n");
                     banque -= mise;
-                } else {
+                    jouerSonDefaite();
+                }
+                else
+                {
                     printf("Egalité avec la main splitee!\n");
                     banque += mise;
                 }
             }
         }
 
-        if (!joueurDepasse) {
-            while (croupier.score < 17) {
+        if (!joueurDepasse)
+        {
+            while (croupier.score < 17)
+            {
                 ajouterCarte(&croupier, deck[indexDeck++]);
             }
 
-            afficherSeparation();
+            afficherSeparation(banque);
             afficherMain(&joueur, "Joueur");
             afficherMain(&croupier, "Croupier");
 
-            if (croupier.score > 21) {
+            if (croupier.score > 21)
+            {
                 printf("Le croupier depasse 21! Le joueur gagne.\n");
                 banque += mise;
-                Beep(750, 300); // Émettre un bip sonore
-            } else if (joueur.score > croupier.score) {
+                jouerSonVictoire();
+            }
+            else if (joueur.score > croupier.score)
+            {
                 printf("Le joueur gagne!\n");
                 banque += mise;
-                Beep(750, 300); // Émettre un bip sonore
-            } else if (joueur.score < croupier.score) {
+                jouerSonVictoire();
+            }
+            else if (joueur.score < croupier.score)
+            {
                 printf("Le croupier gagne!\n");
                 banque -= mise;
-            } else {
+                jouerSonDefaite();
+            }
+            else
+            {
                 printf("Egalité!\n");
             }
         }
 
-        if (banque <= 0) {
+        if (banque <= 0)
+        {
             printf("Vous avez perdu tout votre argent. Fin du jeu.\n");
             break;
         }

@@ -1,6 +1,8 @@
 #include "main.h"
+#include "jeu.h"
 
-int main() {
+int main()
+{
     jouerBlackjack();
     return 0;
 }
