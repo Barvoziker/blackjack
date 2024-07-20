@@ -1,7 +1,3 @@
-Voici le README avec les deux configurations, CMakeLists.txt et Makefile :
-
----
-
 # Projet Blackjack en C
 
 ## Présentation du Projet
