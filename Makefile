@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -std=c11 -Iinclude
+CFLAGS = -Wall -Wextra -std=c11 -g -O0 -Iinclude
 
 all: blackjack
 
@@ -19,4 +19,4 @@ src/son.o: src/son.c include/son.h
 	$(CC) $(CFLAGS) -c src/son.c -o src/son.o
 
 clean:
-	del src\*.o
+	del src\*.o blackjack
