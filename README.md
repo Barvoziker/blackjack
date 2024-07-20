@@ -158,5 +158,3 @@ Nous avons identifié une erreur d'accès mémoire ("UNADDRESSABLE ACCESS beyond
 
 - **Gaël** a utilisé VSCode avec les configurations de compilation CMake.
 - **Mathis** a utilisé CLion avec les configurations CMake.
-
-Ces environnements de développement nous ont permis de travailler de manière efficace et collaborative sur ce projet.
